@@ -1,7 +1,7 @@
 #!/bin/sh
 
 export PATH=/sbin:/usr/sbin:$PATH
-DEBOS_CMD=debos
+DEBOS_CMD=/mnt/data/Git/debos/debos
 ARGS=
 arch=
 device="pinephone"

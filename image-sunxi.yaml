@@ -32,7 +32,7 @@ actions:
         end: 128MB
         flags: [ boot ]
       - name: rootfs
-        fs: ext4
+        fs: f2fs
         start: 128MB
         end: 100%
 
