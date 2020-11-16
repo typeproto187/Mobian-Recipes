@@ -9,5 +9,5 @@ actions:
     description: Install device-specific packages
     packages:
       - {{ $device }}-support
+      - mobian-phosh-phone
       - firefox-esr-mobile-config
-      - mobile-broadband-provider-info
