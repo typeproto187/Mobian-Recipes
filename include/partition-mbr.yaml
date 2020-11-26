@@ -1,13 +1,15 @@
 {{- $architecture := or .architecture "arm64" -}}
 {{- $filesystem := or .filesystem "ext4" }}
 {{- $image := or .image "mobian-$device.img" -}}
+{{- $imagesize := or .imagesize "3.8GB" }}
+{{- $rootstart := or .rootstart "256MiB" }}
 
 architecture: {{ $architecture }}
 
 actions:
   - action: image-partition
     imagename: {{ $image }}
-    imagesize: 3.8GB
+    imagesize: {{ $imagesize }}
     partitiontype: msdos
     mountpoints:
       - mountpoint: /
@@ -22,5 +24,5 @@ actions:
         flags: [ boot ]
       - name: rootfs
         fs: {{ $filesystem }}
-        start: 256MiB
+        start: {{ $rootstart }}
         end: 100%
