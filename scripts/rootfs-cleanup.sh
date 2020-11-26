@@ -19,8 +19,3 @@ systemctl disable getty@.service
 rm -f /lib/systemd/system/wpa_supplicant@.service \
       /lib/systemd/system/wpa_supplicant-wired@.service \
       /lib/systemd/system/wpa_supplicant-nl80211@.service
-
-# Remove temporary dummy bootsector and u-boot binary
-rm -f /tmp/bootsector.bin \
-      /boot/u-boot-sunxi-with-spl.bin \
-      /boot/librem5-boot.img

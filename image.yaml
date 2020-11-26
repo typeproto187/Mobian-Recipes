@@ -32,6 +32,6 @@ actions:
       device: {{ $device }}
 
   - action: run
-    description: Cleanup filesystem
+    description: Cleanup final image
     chroot: true
-    script: scripts/cleanup.sh
+    script: scripts/final-cleanup.sh
