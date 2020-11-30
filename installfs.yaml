@@ -33,8 +33,19 @@ actions:
       - calamares-settings-mobian
       - device-tree-compiler
       - initramfs-tools
+      - mobian-plymouth-theme
       - squashfs-tools-ng
       - u-boot-tools
+
+  - action: run
+    description: Set up system
+    chroot: true
+    script: scripts/setup-system.sh {{ $hostname }}
+
+  - action: run
+    description: Set up default user
+    chroot: true
+    script: scripts/setup-user.sh {{ $username }} {{ $password }}
 
   - action: run
     description: setup ondevice installer to start on boot
