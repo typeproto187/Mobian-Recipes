@@ -16,13 +16,18 @@ actions:
     source: rootfs-{{ $device }}-{{ $environment }}.tar.gz
     destination: /var/lib/rootfs.tar.gz
 
+  - action: run
+    description: Convert filesystem tarball to squashfs
+    chroot: true
+    script: scripts/convert-rootfs.sh
+
   - action: recipe
     recipe: include/partition-{{ $partitiontable }}.yaml
     variables:
       filesystem: {{ $filesystem }}
       image: {{ $image }}
-      imagesize: 7.8GB
-      rootstart: 4GiB
+      imagesize: 8GB
+      rootstart: 5GiB
 
   - action: filesystem-deploy
     description: Deploy filesystem onto image
