@@ -30,11 +30,11 @@ actions:
     packages:
       - cryptsetup
       - calamares
-      - mobian-installer
-      - u-boot-tools
+      - calamares-settings-mobian
       - device-tree-compiler
       - initramfs-tools
       - squashfs-tools-ng
+      - u-boot-tools
 
   - action: run
     description: setup ondevice installer to start on boot
