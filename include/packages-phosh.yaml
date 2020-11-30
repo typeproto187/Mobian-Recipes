@@ -42,3 +42,4 @@ actions:
 {{ end }}
       - cryptsetup
       - cryptsetup-initramfs
+      - osk-sdl
