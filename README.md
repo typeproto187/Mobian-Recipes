@@ -23,6 +23,7 @@ following required packages:
 - `qemu-system-x86`
 - `qemu-user-static`
 - `binfmt-support`
+- `squashfs-tools-ng` (only required for generating installer images)
 
 Then simply browse to the `mobian-recipes` folder and execute `./build.sh`.
 

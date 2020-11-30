@@ -131,6 +131,11 @@ if [ ! "$image_only" -o ! -f "rootfs-$device-$environment.tar.gz" ]; then
   $DEBOS_CMD $ARGS "rootfs-device.yaml" || exit 1
 fi
 
+# Convert rootfs tarball to squashfs for inclusion in the installer image
+if [ "$installer" -a ! -f "rootfs-$device-$environment.sqfs" ]; then
+  zcat "rootfs-$device-$environment.tar.gz" | tar2sqfs "rootfs-$device-$environment.sqfs"
+fi
+
 $DEBOS_CMD $ARGS "$image.yaml"
 
 if [ ! "$no_blockmap" ]; then

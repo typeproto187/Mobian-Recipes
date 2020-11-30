@@ -13,13 +13,8 @@ actions:
     file: installfs-{{ $architecture }}.tar.gz
 
   - action: overlay
-    source: rootfs-{{ $device }}-{{ $environment }}.tar.gz
-    destination: /var/lib/rootfs.tar.gz
-
-  - action: run
-    description: Convert filesystem tarball to squashfs
-    chroot: true
-    script: scripts/convert-rootfs.sh
+    source: rootfs-{{ $device }}-{{ $environment }}.sqfs
+    destination: /var/lib/rootfs.sqfs
 
   - action: recipe
     recipe: include/partition-{{ $partitiontable }}.yaml
