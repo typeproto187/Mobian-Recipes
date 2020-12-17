@@ -15,15 +15,17 @@ family=
 image_only=
 installer=
 memory=
+cpus=
 password=
 use_docker=
 username=
 no_blockmap=
 ssh=
 
-while getopts "dDizobse:f:h:m:p:t:u:F:" opt
+while getopts "cdDizobse:f:h:m:p:t:u:F:" opt
 do
   case "$opt" in
+    c ) cpus="$OPTARG" ;;
     d ) use_docker=1 ;;
     D ) debug=1 ;;
     e ) environment="$OPTARG" ;;
@@ -113,7 +115,11 @@ if [ "$ftp_proxy" ]; then
 fi
 
 if [ "$memory" ]; then
-  ARGS="$ARGS --memory $memory"
+  ARGS="$ARGS --memory=$memory"
+fi
+
+if [ "$cpus" ]; then
+  ARGS="$ARGS --cpus=$cpus"
 fi
 
 ARGS="$ARGS -t architecture:$arch -t family:$family -t device:$device \
