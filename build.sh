@@ -21,8 +21,13 @@ use_docker=
 username=
 no_blockmap=
 ssh=
+suite="bullseye"
 
+<<<<<<< HEAD
+while getopts "dDizobsS:e:f:h:m:p:t:u:F:" opt
+=======
 while getopts "cdDizobse:f:h:m:p:t:u:F:" opt
+>>>>>>> f2fs
 do
   case "$opt" in
     c ) cpus="$OPTARG" ;;
@@ -41,6 +46,7 @@ do
     t ) device="$OPTARG" ;;
     u ) username="$OPTARG" ;;
     F ) filesystem="$OPTARG" ;;
+    S ) suite="$OPTARG" ;;
   esac
 done
 
@@ -124,7 +130,8 @@ fi
 
 ARGS="$ARGS -t architecture:$arch -t family:$family -t device:$device \
             -t partitiontable:$partitiontable -t filesystem:$filesystem \
-            -t environment:$environment -t image:$image_file --scratchsize=8G"
+            -t environment:$environment -t image:$image_file \
+            -t suite:$suite --scratchsize=8G"
 
 if [ ! "$image_only" ]; then
   $DEBOS_CMD $ARGS rootfs.yaml || exit 1
