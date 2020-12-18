@@ -1,7 +1,7 @@
 #!/bin/sh
 
 export PATH=/sbin:/usr/sbin:$PATH
-DEBOS_CMD=debos
+DEBOS_CMD=/mnt/data/Git/debos/debos
 ARGS=
 
 device="pinephone"
@@ -15,6 +15,7 @@ family=
 image_only=
 installer=
 memory=
+cpus=
 password=
 use_docker=
 username=
@@ -22,9 +23,14 @@ no_blockmap=
 ssh=
 suite="bullseye"
 
+<<<<<<< HEAD
 while getopts "dDizobsS:e:f:h:m:p:t:u:F:" opt
+=======
+while getopts "cdDizobse:f:h:m:p:t:u:F:" opt
+>>>>>>> f2fs
 do
   case "$opt" in
+    c ) cpus="$OPTARG" ;;
     d ) use_docker=1 ;;
     D ) debug=1 ;;
     e ) environment="$OPTARG" ;;
@@ -115,7 +121,11 @@ if [ "$ftp_proxy" ]; then
 fi
 
 if [ "$memory" ]; then
-  ARGS="$ARGS --memory $memory"
+  ARGS="$ARGS --memory=$memory"
+fi
+
+if [ "$cpus" ]; then
+  ARGS="$ARGS --cpus=$cpus"
 fi
 
 ARGS="$ARGS -t architecture:$arch -t family:$family -t device:$device \
@@ -132,6 +142,11 @@ fi
 
 if [ ! "$image_only" -o ! -f "rootfs-$device-$environment.tar.gz" ]; then
   $DEBOS_CMD $ARGS "rootfs-device.yaml" || exit 1
+fi
+
+# Convert rootfs tarball to squashfs for inclusion in the installer image
+if [ "$installer" -a ! -f "rootfs-$device-$environment.sqfs" ]; then
+  zcat "rootfs-$device-$environment.tar.gz" | tar2sqfs "rootfs-$device-$environment.sqfs"
 fi
 
 $DEBOS_CMD $ARGS "$image.yaml"

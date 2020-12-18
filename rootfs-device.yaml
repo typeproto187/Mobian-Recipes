@@ -14,5 +14,10 @@ actions:
     variables:
       device: {{ $device }}
 
+  - action: run
+    description: Cleanup filesystem
+    chroot: true
+    script: scripts/rootfs-cleanup.sh
+
   - action: pack
     file: rootfs-{{ $device }}-{{ $environment }}.tar.gz

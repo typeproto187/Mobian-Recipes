@@ -1,6 +1,8 @@
 {{- $architecture := or .architecture "arm64" -}}
 {{- $family := or .family "sunxi" }}
 {{- $device := or .device "pinephone" }}
+{{- $partitiontable := or .partitiontable "mbr" }}
+{{- $filesystem := or .filesystem "ext4" }}
 {{- $environment := or .environment "phosh" -}}
 {{- $image := or .image "mobian-installer-$device-$environment.img" -}}
 
@@ -11,28 +13,16 @@ actions:
     file: installfs-{{ $architecture }}.tar.gz
 
   - action: overlay
-    source: rootfs-{{ $device }}-{{ $environment }}.tar.gz
-    destination: /var/lib/rootfs.tar.gz
+    source: rootfs-{{ $device }}-{{ $environment }}.sqfs
+    destination: /var/lib/rootfs.sqfs
 
-  - action: image-partition
-    imagename: {{ $image }}
-    imagesize: 7.8GB
-    partitiontype: msdos
-    mountpoints:
-      - mountpoint: /
-        partition: rootfs
-      - mountpoint: /boot
-        partition: boot
-    partitions:
-      - name: boot
-        fs: ext4
-        start: 4MiB
-        end: 256MiB
-        flags: [ boot ]
-      - name: rootfs
-        fs: ext4
-        start: 2.5GiB
-        end: 100%
+  - action: recipe
+    recipe: include/partition-{{ $partitiontable }}.yaml
+    variables:
+      filesystem: {{ $filesystem }}
+      image: {{ $image }}
+      imagesize: 8GB
+      rootstart: 5GiB
 
   - action: filesystem-deploy
     description: Deploy filesystem onto image
@@ -54,6 +44,6 @@ actions:
       device: {{ $device }}
 
   - action: run
-    description: Cleanup filesystem
+    description: Cleanup final image
     chroot: true
-    script: scripts/cleanup.sh
+    script: scripts/final-cleanup.sh
