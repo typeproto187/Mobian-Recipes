@@ -23,11 +23,7 @@ no_blockmap=
 ssh=
 suite="bullseye"
 
-<<<<<<< HEAD
-while getopts "dDizobsS:e:f:h:m:p:t:u:F:" opt
-=======
 while getopts "cdDizobse:f:h:m:p:t:u:F:" opt
->>>>>>> f2fs
 do
   case "$opt" in
     c ) cpus="$OPTARG" ;;
