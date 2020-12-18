@@ -2,6 +2,8 @@
 {{- $username := or .username "mobian" -}}
 {{- $password := or .password "1234" -}}
 {{- $hostname := or .hostname "mobian" -}}
+{{- $environment := or .environment "phosh" -}}
+{{- $ssh := or .ssh "" -}}
 
 architecture: {{ $architecture }}
 
@@ -24,29 +26,32 @@ actions:
     chroot: true
     script: scripts/setup-repo.sh
 
-  - action: apt
-    recommends: false
-    description: Install mobian-specific packages
-    packages:
-      - mobian-phosh
-      - mobian-phosh-games
-      - eog
-      - epiphany-browser
-      - firefox-esr
-      - flashlight
-      - fractal
-      - gnome-authenticator
-      - gnome-sound-recorder
-      - gnome-todo
-      - pinhole
-      - powersupply
-      - telegram-desktop
-      - webext-ublock-origin
+  - action: recipe
+    recipe: include/packages-{{ $environment }}.yaml
+    variables:
+      ssh: {{ $ssh }}
 
   - action: run
     description: Set up default user
     chroot: true
     script: scripts/setup-user.sh {{ $username }} {{ $password }}
+
+{{ if $ssh }}
+  - action: overlay
+    description: Set up sshd configuration
+    source: overlays/sshd_config.d/
+    destination: /etc/ssh/sshd_config.d/
+
+  - action: overlay
+    description: Set up user's ssh configuration
+    source: overlays/ssh/
+    destination: /home/{{ $username }}/.ssh/
+
+  - action: run
+    description: Set owner of .ssh
+    chroot: true
+    command: chown -R {{ $username }}:{{ $username }} /home/{{ $username }}/.ssh/
+{{ end }}
 
   - action: run
     description: Set up system
@@ -54,4 +59,4 @@ actions:
     script: scripts/setup-system.sh {{ $hostname }}
 
   - action: pack
-    file: rootfs-{{ $architecture }}.tar.gz
+    file: rootfs-{{ $architecture }}-{{ $environment }}.tar.gz

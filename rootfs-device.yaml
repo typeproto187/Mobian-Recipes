@@ -1,0 +1,23 @@
+{{- $architecture := or .architecture "arm64" -}}
+{{- $family := or .family "sunxi" }}
+{{- $device := or .device "pinephone" }}
+{{- $environment := or .environment "phosh" -}}
+
+architecture: {{ $architecture }}
+
+actions:
+  - action: unpack
+    file: rootfs-{{ $architecture }}-{{ $environment }}.tar.gz
+
+  - action: recipe
+    recipe: devices/{{ $family }}/packages-{{ $environment }}.yaml
+    variables:
+      device: {{ $device }}
+
+  - action: run
+    description: Cleanup filesystem
+    chroot: true
+    script: scripts/rootfs-cleanup.sh
+
+  - action: pack
+    file: rootfs-{{ $device }}-{{ $environment }}.tar.gz

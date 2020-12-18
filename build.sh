@@ -3,54 +3,82 @@
 export PATH=/sbin:/usr/sbin:$PATH
 DEBOS_CMD=/mnt/data/Git/debos/debos
 ARGS=
-arch=
+
 device="pinephone"
+image="image"
+partitiontable="mbr"
+filesystem="ext4"
+environment="phosh"
+arch=
 do_compress=
+family=
 image_only=
-image_recipe=
+installer=
 memory=
+cpus=
 password=
 use_docker=
 username=
+no_blockmap=
+ssh=
 
-while getopts "dizf:h:m:p:t:u:" opt
+while getopts "cdDizobse:f:h:m:p:t:u:F:" opt
 do
   case "$opt" in
+    c ) cpus="$OPTARG" ;;
     d ) use_docker=1 ;;
+    D ) debug=1 ;;
+    e ) environment="$OPTARG" ;;
     i ) image_only=1 ;;
     z ) do_compress=1 ;;
+    b ) no_blockmap=1 ;;
+    s ) ssh=1 ;;
+    o ) installer=1 ;;
     f ) ftp_proxy="$OPTARG" ;;
     h ) http_proxy="$OPTARG" ;;
     m ) memory="$OPTARG" ;;
     p ) password="$OPTARG" ;;
     t ) device="$OPTARG" ;;
     u ) username="$OPTARG" ;;
+    F ) filesystem="$OPTARG" ;;
   esac
 done
-
-IMG_FILE="mobian-$device-`date +%Y%m%d`.img"
 
 case "$device" in
   "pinephone" )
     arch="arm64"
-    image_recipe="image-sunxi"
+    family="sunxi"
     ;;
   "pinetab" )
     arch="arm64"
-    image_recipe="image-sunxi"
+    family="sunxi"
+    ;;
+  "librem5" )
+    arch="arm64"
+    family="librem5"
     ;;
   "amd64" )
     arch="amd64"
-    image_recipe="image-amd64"
+    family="amd64"
+    device="efi"
+    partitiontable="gpt"
     ;;
   "amd64-legacy" )
     arch="amd64"
-    image_recipe="image-amd64-legacy"
+    family="amd64"
+    device="pc"
     ;;
   * )
-    usage
+    echo "Unsupported device '$device'"
+    exit 1
     ;;
 esac
+
+image_file="mobian-$device-$environment-`date +%Y%m%d`.img"
+if [ "$installer" ]; then
+  image="installer"
+  image_file="mobian-installer-$device-$environment-`date +%Y%m%d`.img"
+fi
 
 if [ "$use_docker" ]; then
   DEBOS_CMD=docker
@@ -58,12 +86,24 @@ if [ "$use_docker" ]; then
             --mount type=bind,source=$(pwd),destination=/recipes \
             --security-opt label=disable godebos/debos"
 fi
+if [ "$debug" ]; then
+  ARGS="$ARGS --debug-shell"
+fi
+
 if [ "$username" ]; then
   ARGS="$ARGS -t username:$username"
 fi
 
 if [ "$password" ]; then
   ARGS="$ARGS -t password:$password"
+fi
+
+if [ "$ssh" ]; then
+  ARGS="$ARGS -t ssh:$ssh"
+fi
+
+if [ "$environment" ]; then
+  ARGS="$ARGS -t environment:$environment"
 fi
 
 if [ "$http_proxy" ]; then
@@ -75,18 +115,40 @@ if [ "$ftp_proxy" ]; then
 fi
 
 if [ "$memory" ]; then
-  ARGS="$ARGS --memory $memory"
+  ARGS="$ARGS --memory=$memory"
 fi
 
-ARGS="$ARGS -t architecture:$arch -t device:$device --scratchsize=8G"
+if [ "$cpus" ]; then
+  ARGS="$ARGS --cpus=$cpus"
+fi
+
+ARGS="$ARGS -t architecture:$arch -t family:$family -t device:$device \
+            -t partitiontable:$partitiontable -t filesystem:$filesystem \
+            -t environment:$environment -t image:$image_file --scratchsize=8G"
 
 if [ ! "$image_only" ]; then
   $DEBOS_CMD $ARGS rootfs.yaml || exit 1
+  if [ "$installer" ]; then
+    $DEBOS_CMD $ARGS installfs.yaml || exit 1
+  fi
 fi
 
-$DEBOS_CMD $ARGS -t image:$IMG_FILE $image_recipe.yaml
+if [ ! "$image_only" -o ! -f "rootfs-$device-$environment.tar.gz" ]; then
+  $DEBOS_CMD $ARGS "rootfs-device.yaml" || exit 1
+fi
+
+# Convert rootfs tarball to squashfs for inclusion in the installer image
+if [ "$installer" -a ! -f "rootfs-$device-$environment.sqfs" ]; then
+  zcat "rootfs-$device-$environment.tar.gz" | tar2sqfs "rootfs-$device-$environment.sqfs"
+fi
+
+$DEBOS_CMD $ARGS "$image.yaml"
+
+if [ ! "$no_blockmap" ]; then
+  bmaptool create "$image_file" > "$image_file.bmap"
+fi
 
 if [ "$do_compress" ]; then
-  echo "Compressing $IMG_FILE..."
-  gzip --keep --force $IMG_FILE
+  echo "Compressing $image_file..."
+  gzip --keep --force $image_file
 fi

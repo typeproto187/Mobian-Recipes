@@ -1,0 +1,49 @@
+{{- $architecture := or .architecture "arm64" -}}
+{{- $family := or .family "sunxi" }}
+{{- $device := or .device "pinephone" }}
+{{- $partitiontable := or .partitiontable "mbr" }}
+{{- $filesystem := or .filesystem "ext4" }}
+{{- $environment := or .environment "phosh" -}}
+{{- $image := or .image "mobian-installer-$device-$environment.img" -}}
+
+architecture: {{ $architecture }}
+
+actions:
+  - action: unpack
+    file: installfs-{{ $architecture }}.tar.gz
+
+  - action: overlay
+    source: rootfs-{{ $device }}-{{ $environment }}.sqfs
+    destination: /var/lib/rootfs.sqfs
+
+  - action: recipe
+    recipe: include/partition-{{ $partitiontable }}.yaml
+    variables:
+      filesystem: {{ $filesystem }}
+      image: {{ $image }}
+      imagesize: 8GB
+      rootstart: 5GiB
+
+  - action: filesystem-deploy
+    description: Deploy filesystem onto image
+
+  - action: apt
+    recommends: false
+    description: Install device-specific packages
+    packages:
+      - {{ $device }}-support
+
+  - action: run
+    description: Prepare bootloader
+    chroot: true
+    script: devices/{{ $family }}/bootloader.sh {{ $device }}
+
+  - action: recipe
+    recipe: devices/{{ $family }}/bootloader.yaml
+    variables:
+      device: {{ $device }}
+
+  - action: run
+    description: Cleanup final image
+    chroot: true
+    script: scripts/final-cleanup.sh

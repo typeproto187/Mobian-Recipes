@@ -7,7 +7,8 @@ apt clean
 
 # Remove SSH keys and machine ID so they get generated on first boot
 rm -f /etc/ssh/ssh_host_* \
-      /etc/machine-id
+      /etc/machine-id \
+      /var/lib/dbus/machine-id
 
 # Disable getty on tty1, as we won't connect in console mode anyway
 systemctl disable getty@.service
@@ -18,7 +19,3 @@ systemctl disable getty@.service
 rm -f /lib/systemd/system/wpa_supplicant@.service \
       /lib/systemd/system/wpa_supplicant-wired@.service \
       /lib/systemd/system/wpa_supplicant-nl80211@.service
-
-# Remove temporary dummy bootsector and u-boot binary
-rm -f /tmp/bootsector.bin \
-      /boot/u-boot-sunxi-with-spl.bin
