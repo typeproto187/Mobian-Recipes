@@ -1,0 +1,67 @@
+{{- $architecture := or .architecture "arm64" -}}
+{{- $device := or .device "pinephone" }}
+{{- $image := or .image "mobian-$device.img" -}}
+
+architecture: {{ $architecture }}
+
+actions:
+  - action: unpack
+    file: rootfs-{{ $architecture }}.tar.gz
+
+{{ if eq $device "pinephone" }}
+  - action: apt
+    recommends: false
+    description: Install telephony packages
+    packages:
+      - mobian-phosh-phone
+{{ end }}
+
+  - action: image-partition
+    imagename: {{ $image }}
+    imagesize: 3.8GB
+    partitiontype: msdos
+    mountpoints:
+      - mountpoint: /
+        partition: rootfs
+      - mountpoint: /boot
+        partition: boot
+    partitions:
+      - name: boot
+        fs: ext4
+        start: 1MB
+        end: 128MB
+        flags: [ boot ]
+      - name: rootfs
+        fs: f2fs
+        start: 128MB
+        end: 100%
+
+  - action: filesystem-deploy
+    description: Deploy filesystem onto image
+
+  - action: apt
+    recommends: false
+    description: Install device-specific packages
+    packages:
+      - {{ $device }}-support
+
+  - action: run
+    description: Create bootloader
+    chroot: true
+    script: scripts/bootloader-sunxi.sh {{ $device }}
+
+  - action: raw
+    description: Install bootloader
+    origin: filesystem
+    source: boot/u-boot-sunxi-with-spl.bin
+    offset: 8192
+
+  - action: run
+    description: Cleanup filesystem
+    chroot: true
+    script: scripts/cleanup.sh
+
+  - action: run
+    description: Create block map file
+    postprocess: true
+    command: bmaptool create {{ $image }} > {{ $image }}.bmap
